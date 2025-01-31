@@ -21,6 +21,7 @@ let targetWord = getRandomWord(); // Call getRandomWord once
 let wordVisible = false;
 let bullets = [];
 let hitLetters = [];
+let explosion = { x: 0, y: 0, active: false };
 
 function getRandomLetter() {
   return letters[Math.floor(Math.random() * letters.length)];
@@ -82,6 +83,19 @@ function drawTargetWord() {
   }
 }
 
+function drawExplosion() {
+  if (explosion.active) {
+    ctx.fillStyle = 'orange';
+    ctx.beginPath();
+    ctx.arc(explosion.x, explosion.y, 30, 0, Math.PI * 2);
+    ctx.fill();
+    setTimeout(() => {
+      explosion.active = false;
+      document.location.reload();
+    }, 500);
+  }
+}
+
 function moveShip(event) {
   if (event.key === 'ArrowLeft') {
     ship.speed = Math.max(ship.speed - ship.acceleration, -ship.maxSpeed);
@@ -122,8 +136,9 @@ function checkCollision() {
       letterObj.y < ship.y + ship.height &&
       letterObj.y + 20 > ship.y
     ) {
-      alert('Game Over!');
-      document.location.reload();
+      explosion.x = ship.x + ship.width / 2;
+      explosion.y = ship.y + ship.height / 2;
+      explosion.active = true;
     }
   });
 }
@@ -161,6 +176,7 @@ function gameLoop() {
   drawShip();
   drawBullets();
   drawTargetWord();
+  drawExplosion();
   checkCollision();
   checkBulletCollision();
   ship.x += ship.speed;
@@ -170,7 +186,9 @@ function gameLoop() {
   if (!wordVisible && Math.random() < 0.01) {
     showWord();
   }
-  requestAnimationFrame(gameLoop);
+  if (!explosion.active) {
+    requestAnimationFrame(gameLoop);
+  }
 }
 
 gameLoop();
