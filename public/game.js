@@ -12,7 +12,9 @@ const ship = {
   y: canvas.height - 30,
   width: 20,
   height: 20,
-  speed: 5
+  speed: 0,
+  acceleration: 0.2,
+  maxSpeed: 5
 };
 
 function getRandomLetter() {
@@ -43,22 +45,30 @@ function drawShip() {
 }
 
 function moveShip(event) {
-  if (event.key === 'ArrowLeft' && ship.x > 0) {
-    ship.x -= ship.speed;
-  } else if (event.key === 'ArrowRight' && ship.x < canvas.width - ship.width) {
-    ship.x += ship.speed;
+  if (event.key === 'ArrowLeft') {
+    ship.speed = Math.max(ship.speed - ship.acceleration, -ship.maxSpeed);
+  } else if (event.key === 'ArrowRight') {
+    ship.speed = Math.min(ship.speed + ship.acceleration, ship.maxSpeed);
+  }
+}
+
+function stopShip(event) {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    ship.speed = 0;
   }
 }
 
 function shootLetter(event) {
-  const shotLetter = String.fromCharCode(event.keyCode);
-  fallingLetters = fallingLetters.filter(letterObj => {
-    if (letterObj.letter === shotLetter) {
-      score++;
-      return false;
-    }
-    return true;
-  });
+  if (event.key === ' ') {
+    const shotLetter = String.fromCharCode(event.keyCode);
+    fallingLetters = fallingLetters.filter(letterObj => {
+      if (letterObj.letter === shotLetter) {
+        score++;
+        return false;
+      }
+      return true;
+    });
+  }
 }
 
 function checkCollision() {
@@ -76,12 +86,14 @@ function checkCollision() {
 }
 
 document.addEventListener('keydown', moveShip);
+document.addEventListener('keyup', stopShip);
 document.addEventListener('keydown', shootLetter);
 
 function gameLoop() {
   drawLetters();
   drawShip();
   checkCollision();
+  ship.x += ship.speed;
   if (Math.random() < 0.05) {
     createFallingLetter();
   }
