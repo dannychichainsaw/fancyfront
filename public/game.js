@@ -13,11 +13,11 @@ const ship = {
   width: 20,
   height: 20,
   speed: 0,
-  acceleration: 0.5,
-  maxSpeed: 10
+  acceleration: 1, // Increased acceleration
+  maxSpeed: 15 // Increased max speed
 };
 
-let targetWord = '';
+let targetWord = getRandomWord(); // Call getRandomWord once
 let wordVisible = false;
 let bullets = [];
 let hitLetters = [];
@@ -92,7 +92,7 @@ function moveShip(event) {
 
 function stopShip(event) {
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    ship.speed *= 0.9; // Apply friction to gradually stop the ship
+    ship.speed *= 0.8; // Increased deceleration
   }
 }
 
@@ -107,7 +107,6 @@ function shootLetter(event) {
 }
 
 function showWord() {
-  targetWord = getRandomWord();
   wordVisible = true;
   hitLetters = [];
   setTimeout(() => {
