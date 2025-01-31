@@ -13,12 +13,14 @@ const ship = {
   width: 20,
   height: 20,
   speed: 0,
-  acceleration: 0.2,
-  maxSpeed: 5
+  acceleration: 0.5,
+  maxSpeed: 10
 };
 
 let targetWord = '';
 let wordVisible = false;
+let bullets = [];
+let hitLetters = [];
 
 function getRandomLetter() {
   return letters[Math.floor(Math.random() * letters.length)];
@@ -52,6 +54,34 @@ function drawShip() {
   ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
 }
 
+function drawBullets() {
+  ctx.fillStyle = 'yellow';
+  bullets.forEach((bullet, index) => {
+    ctx.fillRect(bullet.x, bullet.y, 5, 10);
+    bullet.y -= bullet.speed;
+    if (bullet.y < 0) {
+      bullets.splice(index, 1);
+    }
+  });
+}
+
+function drawTargetWord() {
+  if (wordVisible) {
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Arial';
+    let displayWord = '';
+    for (let i = 0; i < targetWord.length; i++) {
+      if (hitLetters.includes(targetWord[i])) {
+        ctx.fillStyle = 'green';
+      } else {
+        ctx.fillStyle = 'red';
+      }
+      displayWord += targetWord[i];
+    }
+    ctx.fillText(displayWord, canvas.width / 2 - ctx.measureText(displayWord).width / 2, canvas.height / 2);
+  }
+}
+
 function moveShip(event) {
   if (event.key === 'ArrowLeft') {
     ship.speed = Math.max(ship.speed - ship.acceleration, -ship.maxSpeed);
@@ -62,39 +92,26 @@ function moveShip(event) {
 
 function stopShip(event) {
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    ship.speed = 0;
+    ship.speed *= 0.9; // Apply friction to gradually stop the ship
   }
+}
+
+function shootBullet() {
+  bullets.push({ x: ship.x + ship.width / 2, y: ship.y, speed: 5 });
 }
 
 function shootLetter(event) {
   if (event.key === ' ') {
-    const shotLetter = getRandomLetter();
-    fallingLetters = fallingLetters.filter(letterObj => {
-      if (letterObj.letter === shotLetter) {
-        score++;
-        return false;
-      }
-      return true;
-    });
-    if (targetWord.includes(shotLetter)) {
-      targetWord = targetWord.replace(shotLetter, '');
-      if (targetWord.length === 0) {
-        alert('You completed the word!');
-        showWord();
-      }
-    }
+    shootBullet();
   }
 }
 
 function showWord() {
   targetWord = getRandomWord();
   wordVisible = true;
-  ctx.fillStyle = 'red';
-  ctx.font = '40px Arial';
-  ctx.fillText(targetWord, canvas.width / 2 - ctx.measureText(targetWord).width / 2, canvas.height / 2);
+  hitLetters = [];
   setTimeout(() => {
     wordVisible = false;
-    ctx.clearRect(canvas.width / 2 - ctx.measureText(targetWord).width / 2, canvas.height / 2 - 40, ctx.measureText(targetWord).width, 50);
   }, 2000);
 }
 
@@ -112,6 +129,30 @@ function checkCollision() {
   });
 }
 
+function checkBulletCollision() {
+  bullets.forEach((bullet, bulletIndex) => {
+    fallingLetters.forEach((letterObj, letterIndex) => {
+      if (
+        bullet.x > letterObj.x &&
+        bullet.x < letterObj.x + 20 &&
+        bullet.y > letterObj.y &&
+        bullet.y < letterObj.y + 20
+      ) {
+        fallingLetters.splice(letterIndex, 1);
+        bullets.splice(bulletIndex, 1);
+        score++;
+        if (targetWord.includes(letterObj.letter)) {
+          hitLetters.push(letterObj.letter);
+          if (hitLetters.length === targetWord.length) {
+            alert('You completed the word!');
+            showWord();
+          }
+        }
+      }
+    });
+  });
+}
+
 document.addEventListener('keydown', moveShip);
 document.addEventListener('keyup', stopShip);
 document.addEventListener('keydown', shootLetter);
@@ -119,7 +160,10 @@ document.addEventListener('keydown', shootLetter);
 function gameLoop() {
   drawLetters();
   drawShip();
+  drawBullets();
+  drawTargetWord();
   checkCollision();
+  checkBulletCollision();
   ship.x += ship.speed;
   if (Math.random() < 0.05) {
     createFallingLetter();
