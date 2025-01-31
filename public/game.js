@@ -22,6 +22,7 @@ let wordVisible = false;
 let bullets = [];
 let hitLetters = [];
 let explosion = { x: 0, y: 0, active: false };
+let letterExplosions = [];
 
 function getRandomLetter() {
   return letters[Math.floor(Math.random() * letters.length)];
@@ -96,6 +97,18 @@ function drawExplosion() {
   }
 }
 
+function drawLetterExplosions() {
+  letterExplosions.forEach((explosion, index) => {
+    ctx.fillStyle = 'orange';
+    ctx.beginPath();
+    ctx.arc(explosion.x, explosion.y, 15, 0, Math.PI * 2);
+    ctx.fill();
+    setTimeout(() => {
+      letterExplosions.splice(index, 1);
+    }, 300);
+  });
+}
+
 function moveShip(event) {
   if (event.key === 'ArrowLeft') {
     ship.speed = Math.max(ship.speed - ship.acceleration, -ship.maxSpeed);
@@ -152,6 +165,7 @@ function checkBulletCollision() {
         bullet.y > letterObj.y &&
         bullet.y < letterObj.y + 20
       ) {
+        letterExplosions.push({ x: letterObj.x + 10, y: letterObj.y + 10 });
         fallingLetters.splice(letterIndex, 1);
         bullets.splice(bulletIndex, 1);
         score++;
@@ -177,6 +191,7 @@ function gameLoop() {
   drawBullets();
   drawTargetWord();
   drawExplosion();
+  drawLetterExplosions();
   checkCollision();
   checkBulletCollision();
   ship.x += ship.speed;
