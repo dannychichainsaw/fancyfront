@@ -17,8 +17,16 @@ const ship = {
   maxSpeed: 5
 };
 
+let targetWord = '';
+let wordVisible = false;
+
 function getRandomLetter() {
   return letters[Math.floor(Math.random() * letters.length)];
+}
+
+function getRandomWord() {
+  const words = ['HELLO', 'WORLD', 'JAVASCRIPT', 'GAME', 'CANVAS'];
+  return words[Math.floor(Math.random() * words.length)];
 }
 
 function createFallingLetter() {
@@ -60,7 +68,7 @@ function stopShip(event) {
 
 function shootLetter(event) {
   if (event.key === ' ') {
-    const shotLetter = String.fromCharCode(event.keyCode);
+    const shotLetter = getRandomLetter();
     fallingLetters = fallingLetters.filter(letterObj => {
       if (letterObj.letter === shotLetter) {
         score++;
@@ -68,7 +76,26 @@ function shootLetter(event) {
       }
       return true;
     });
+    if (targetWord.includes(shotLetter)) {
+      targetWord = targetWord.replace(shotLetter, '');
+      if (targetWord.length === 0) {
+        alert('You completed the word!');
+        showWord();
+      }
+    }
   }
+}
+
+function showWord() {
+  targetWord = getRandomWord();
+  wordVisible = true;
+  ctx.fillStyle = 'red';
+  ctx.font = '40px Arial';
+  ctx.fillText(targetWord, canvas.width / 2 - ctx.measureText(targetWord).width / 2, canvas.height / 2);
+  setTimeout(() => {
+    wordVisible = false;
+    ctx.clearRect(canvas.width / 2 - ctx.measureText(targetWord).width / 2, canvas.height / 2 - 40, ctx.measureText(targetWord).width, 50);
+  }, 2000);
 }
 
 function checkCollision() {
@@ -96,6 +123,9 @@ function gameLoop() {
   ship.x += ship.speed;
   if (Math.random() < 0.05) {
     createFallingLetter();
+  }
+  if (!wordVisible && Math.random() < 0.01) {
+    showWord();
   }
   requestAnimationFrame(gameLoop);
 }
